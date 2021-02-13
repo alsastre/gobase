@@ -61,10 +61,10 @@ func main() {
 	}
 
 	logger.Info("Successfully connected to database", zap.String("connectionName", dbSession.Name()))
-	server.DBSession = &dbSession
+	server.Data = data.NewData(dbSession, logger)
 
 	// Fill DB with a Dummy Something collection
-	data.FillSession(*server.DBSession, server.Logger)
+	server.Data.FillSession()
 
 	// Setup Routes
 	r := SetupRouter(&server)

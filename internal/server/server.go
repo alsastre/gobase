@@ -12,14 +12,13 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
-	"github.com/upper/db/v4"
 )
 
 // Server represents the structure of the server with all the common config
 type Server struct {
-	ViperCfg  *viper.Viper // Configuration
-	Logger    *zap.Logger  // Logger to be used
-	DBSession *db.Session  // DB Session
+	ViperCfg *viper.Viper // Configuration
+	Logger   *zap.Logger  // Logger to be used
+	Data     *data.Data   // Data with dbSession included
 }
 
 // The type key is used to prevent collision in the context
@@ -48,7 +47,7 @@ func (server *Server) Router() chi.Router {
 
 // ListSomething request the data framework for the list of items and returns them
 func (server *Server) ListSomething(w http.ResponseWriter, r *http.Request) {
-	lb, err := NewSomethingResponseListResponse(data.ListSomethings(*server.DBSession, server.Logger))
+	lb, err := NewSomethingResponseListResponse(server.Data.ListSomethings())
 	if err != nil {
 		render.Render(w, r, routes.ErrInternalServer(err))
 	}
@@ -93,7 +92,7 @@ func (server *Server) SomethingMiddleware(next http.Handler) http.Handler {
 		var mySomething *data.Something
 		var err error
 		if ID := chi.URLParam(r, "SomethingID"); ID != "" {
-			mySomething, err = data.GetSomething(*server.DBSession, server.Logger, ID)
+			mySomething, err = server.Data.GetSomething(ID)
 		}
 		if err != nil {
 			render.Render(w, r, routes.ErrNotFound(err))
